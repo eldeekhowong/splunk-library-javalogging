@@ -50,6 +50,9 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private String _channel;
     private String _type;
     private String _disableCertificateValidation;
+    private String _keystoreLocation;
+    private String _keystorePassword;
+    private String _keystoreType;
     private String _middleware;
     private String _eventBodySerializer;
     private String _eventHeaderSerializer;
@@ -125,6 +128,10 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
         if (_disableCertificateValidation != null && _disableCertificateValidation.equalsIgnoreCase("true")) {
             sender.disableCertificateValidation();
+        }
+
+        if (_keystoreLocation != null && !_keystoreLocation.equalsIgnoreCase("")) {
+            sender.addKeystore(_keystoreLocation, _keystorePassword, _keystoreType);
         }
 
         super.start();

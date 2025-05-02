@@ -25,8 +25,13 @@ import com.splunk.logging.serialization.HecJsonSerializer;
 import okhttp3.*;
 
 import javax.net.ssl.*;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -84,6 +89,9 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private static final OkHttpClient httpSharedClient = new OkHttpClient(); // shared instance with the default settings
     private OkHttpClient httpClient = null; // shares the same connection pool and thread pools with the shared instance
     private boolean disableCertificateValidation = false;
+    private String keystoreLocation;
+    private String keyStorePassword;
+    private String keyStoreType;
     private SendMode sendMode = SendMode.Sequential;
     private HttpEventCollectorMiddleware middleware = new HttpEventCollectorMiddleware();
 
@@ -253,6 +261,14 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         disableCertificateValidation = true;
     }
 
+    public void addKeystore(String keystoreLocation,
+                            String keyStorePassword,
+                            String keyStoreType) {
+        this.keystoreLocation = keystoreLocation;
+        this.keyStorePassword = keyStorePassword;
+        this.keyStoreType = keyStoreType;
+    }
+
     public void setEventBodySerializer(EventBodySerializer eventBodySerializer) {
         serializer.setEventBodySerializer(eventBodySerializer);
     }
@@ -370,10 +386,41 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
                     }
             };
 
+            KeyManagerFactory keyManagerFactory = null;
+            KeyStore keystore = null;
+
+            // Load the client certificate and private key from a keystore
+            if (keystoreLocation != null && !keystoreLocation.equalsIgnoreCase("")) {
+                try {
+                    keystore = KeyStore.getInstance(keyStoreType);
+                } catch (KeyStoreException e) {
+                    throw new RuntimeException(e);
+                }
+
+                try (FileInputStream keyStoreStream = new FileInputStream(keystoreLocation)) {
+                    keystore.load(keyStoreStream, keyStorePassword.toCharArray());
+                } catch (NoSuchAlgorithmException | CertificateException | IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                // Initialize the KeyManagerFactory with the client certificate
+                try {
+                    keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException(e);
+                }
+
+                try {
+                    keyManagerFactory.init(keystore, keyStorePassword.toCharArray());
+                } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
             try {
                 // install the all-trusting trust manager
                 final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-                sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+                sslContext.init(keyManagerFactory.getKeyManagers(), trustAllCerts, new java.security.SecureRandom());
                 // create an ssl socket factory with the all-trusting manager
                 final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
                 builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
