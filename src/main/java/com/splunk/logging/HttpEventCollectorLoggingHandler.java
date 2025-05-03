@@ -230,10 +230,10 @@ public final class HttpEventCollectorLoggingHandler extends Handler {
             this.sender.disableCertificateValidation();
         }
 
-        if (!getConfigurationProperty("keystoreLocation", "").equalsIgnoreCase("")) {
-            this.sender.addKeystore(getConfigurationProperty("keystoreLocation",""),
-                    getConfigurationProperty("keystorePassword",""),
-                    getConfigurationProperty("keystoreType",""));
+        if (!getConfigurationProperty("enableKeyStore", "false").equalsIgnoreCase("true")) {
+            this.sender.addKeyStore(getConfigurationProperty("keyStoreLocation",""),
+                    getConfigurationProperty("keyStorePassword",""),
+                    getConfigurationProperty("keyStoreType",""));
         }
     }
 

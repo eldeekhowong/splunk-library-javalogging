@@ -77,9 +77,10 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                                             String sendMode,
                                             String middleware,
                                             final String disableCertificateValidation,
-                                            final String keystoreLocation,
-                                            final String keystorePassword,
-                                            final String keystoreType,
+                                            final String enableKeyStore,
+                                            final String keyStoreLocation,
+                                            final String keyStorePassword,
+                                            final String keyStoreType,
                                             final String eventBodySerializer,
                                             final String eventHeaderSerializer,
                                             HttpEventCollectorSender.TimeoutSettings timeoutSettings)
@@ -122,8 +123,8 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             this.sender.disableCertificateValidation();
         }
 
-        if (keystoreLocation != null && !keystoreLocation.equalsIgnoreCase("")) {
-            this.sender.addKeystore(keystoreLocation, keystorePassword, keystoreType);
+        if (enableKeyStore != null && enableKeyStore.equalsIgnoreCase("true")) {
+            this.sender.addKeyStore(keyStoreLocation, keyStorePassword, keyStoreType);
         }
 
         this.includeLoggerName = includeLoggerName;
@@ -158,9 +159,10 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
             @PluginAttribute("send_mode") final String sendMode,
             @PluginAttribute("middleware") final String middleware,
             @PluginAttribute("disableCertificateValidation") final String disableCertificateValidation,
-            @PluginAttribute("keystoreLocation") final String keystoreLocation,
-            @PluginAttribute("keystorePassword") final String keystorePassword,
-            @PluginAttribute("keystoreType") final String keystoreType,
+            @PluginAttribute("enableKeyStore") final String enableKeyStore,
+            @PluginAttribute("keyStoreLocation") final String keyStoreLocation,
+            @PluginAttribute("keyStorePassword") final String keyStorePassword,
+            @PluginAttribute("keyStoreType") final String keyStoreType,
             @PluginAttribute("eventBodySerializer") final String eventBodySerializer,
             @PluginAttribute("eventHeaderSerializer") final String eventHeaderSerializer,
             @PluginAttribute("errorCallback") final String errorCallback,
@@ -238,9 +240,10 @@ public final class HttpEventCollectorLog4jAppender extends AbstractAppender
                 sendMode,
                 middleware,
                 disableCertificateValidation,
-                keystoreLocation,
-                keystorePassword,
-                keystoreType,
+                enableKeyStore,
+                keyStoreLocation,
+                keyStorePassword,
+                keyStoreType,
                 eventBodySerializer,
                 eventHeaderSerializer,
                 new HttpEventCollectorSender.TimeoutSettings(connectTimeout, callTimeout, readTimeout, writeTimeout, terminationTimeout)

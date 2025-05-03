@@ -89,7 +89,8 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
     private static final OkHttpClient httpSharedClient = new OkHttpClient(); // shared instance with the default settings
     private OkHttpClient httpClient = null; // shares the same connection pool and thread pools with the shared instance
     private boolean disableCertificateValidation = false;
-    private String keystoreLocation;
+    private boolean enableKeyStore = false;
+    private String keyStoreLocation;
     private String keyStorePassword;
     private String keyStoreType;
     private SendMode sendMode = SendMode.Sequential;
@@ -261,10 +262,11 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
         disableCertificateValidation = true;
     }
 
-    public void addKeystore(String keystoreLocation,
+    public void addKeyStore(String keyStoreLocation,
                             String keyStorePassword,
                             String keyStoreType) {
-        this.keystoreLocation = keystoreLocation;
+        this.enableKeyStore = true;
+        this.keyStoreLocation = keyStoreLocation;
         this.keyStorePassword = keyStorePassword;
         this.keyStoreType = keyStoreType;
     }
@@ -390,14 +392,14 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             KeyStore keystore = null;
 
             // Load the client certificate and private key from a keystore
-            if (keystoreLocation != null && !keystoreLocation.equalsIgnoreCase("")) {
+            if (enableKeyStore) {
                 try {
                     keystore = KeyStore.getInstance(keyStoreType);
                 } catch (KeyStoreException e) {
                     throw new RuntimeException(e);
                 }
 
-                try (FileInputStream keyStoreStream = new FileInputStream(keystoreLocation)) {
+                try (FileInputStream keyStoreStream = new FileInputStream(keyStoreLocation)) {
                     keystore.load(keyStoreStream, keyStorePassword.toCharArray());
                 } catch (NoSuchAlgorithmException | CertificateException | IOException e) {
                     throw new RuntimeException(e);
@@ -420,7 +422,13 @@ public class HttpEventCollectorSender extends TimerTask implements HttpEventColl
             try {
                 // install the all-trusting trust manager
                 final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-                sslContext.init(keyManagerFactory.getKeyManagers(), trustAllCerts, new java.security.SecureRandom());
+
+                //use keystore
+                if (enableKeyStore)
+                    sslContext.init(keyManagerFactory.getKeyManagers(), trustAllCerts, new java.security.SecureRandom());
+                else
+                    sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+
                 // create an ssl socket factory with the all-trusting manager
                 final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
                 builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);

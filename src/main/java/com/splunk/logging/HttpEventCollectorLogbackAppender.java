@@ -50,9 +50,10 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
     private String _channel;
     private String _type;
     private String _disableCertificateValidation;
-    private String _keystoreLocation;
-    private String _keystorePassword;
-    private String _keystoreType;
+    private String _enableKeyStore;
+    private String _keyStoreLocation;
+    private String _keyStorePassword;
+    private String _keyStoreType;
     private String _middleware;
     private String _eventBodySerializer;
     private String _eventHeaderSerializer;
@@ -130,8 +131,8 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
             sender.disableCertificateValidation();
         }
 
-        if (_keystoreLocation != null && !_keystoreLocation.equalsIgnoreCase("")) {
-            sender.addKeystore(_keystoreLocation, _keystorePassword, _keystoreType);
+        if (_enableKeyStore != null && _enableKeyStore.equalsIgnoreCase("true")) {
+            sender.addKeyStore(_keyStoreLocation, _keyStorePassword, _keyStoreType);
         }
 
         super.start();
@@ -367,6 +368,22 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
         this._disableCertificateValidation = disableCertificateValidation;
     }
 
+    public void setEnableKeystore(String enableKeyStore) {
+        this._enableKeyStore = enableKeyStore;
+    }
+
+    public void setKeyStoreLocation(String keyStoreLocation) {
+        this._keyStoreLocation = keyStoreLocation;
+    }
+
+    public void setKeyStorePassword(String keyStorePassword) {
+        this._keyStorePassword = keyStorePassword;
+    }
+
+    public void setKeyStoreType(String keyStoreType) {
+        this._keyStoreType = keyStoreType;
+    }
+
     public void setbatch_size_count(String value) {
         _batchCount = parseLong(value, HttpEventCollectorSender.DefaultBatchCount);
         _batchingConfigured = true;
@@ -399,6 +416,22 @@ public class HttpEventCollectorLogbackAppender<E> extends AppenderBase<E> {
 
     public String getDisableCertificateValidation() {
         return _disableCertificateValidation;
+    }
+
+    public String getEnableKeyStore() {
+        return _enableKeyStore;
+    }
+
+    public String getKeyStoreLocation() {
+        return _keyStoreLocation;
+    }
+
+    public String getKeyStorePassword() {
+        return _keyStorePassword;
+    }
+
+    public String getKeyStoreType() {
+        return _keyStoreType;
     }
 
     public void setEventBodySerializer(String eventBodySerializer) {
